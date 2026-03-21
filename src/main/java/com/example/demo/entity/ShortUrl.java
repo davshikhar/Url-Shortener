@@ -21,9 +21,13 @@ public class ShortUrl {
     @Column(nullable = false, unique = true)
     private String shortCode;
 
-
+    @Column(nullable = false)
     private String originalUrl;
+
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(nullable = true)
     private LocalDateTime expiresAt;
 
     @PrePersist
