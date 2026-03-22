@@ -15,6 +15,8 @@ public class ShortUrlGenerator {
         this.secureRandom=new SecureRandom();
     }
 
+    /// we use SecureRandom because it is very secure and no one can predict the random code.
+
     public String generate(){
         StringBuilder code = new StringBuilder(Code_length);
 
