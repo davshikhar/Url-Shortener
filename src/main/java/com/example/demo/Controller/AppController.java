@@ -21,8 +21,11 @@ import java.util.Optional;
 @Controller
 public class AppController {
 
-    @Autowired
-    private ShortUrlService shortUrlService;
+    private final ShortUrlService shortUrlService;
+
+    public AppController(ShortUrlService shortUrlService){
+        this.shortUrlService=shortUrlService;
+    }
 
     /// Displays the form page for URL shortening
     @GetMapping("/")
@@ -79,6 +82,11 @@ public class AppController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Short code not found");
         }
 
-        return "redirect:" + originalUrl.get();
+        String url = originalUrl.get();
+        if(!url.startsWith("http://")&&(!url.startsWith("https://"))){
+            url="https://"+url;
+        }
+
+        return "redirect:" + url;
     }
 }

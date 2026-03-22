@@ -50,4 +50,9 @@ public class ShortUrlService {
         while(urlRepository.findByShortCode(shortCode).isPresent());
         return shortCode;
     }
+
+    @Transactional(readOnly = true)
+    public Optional<String> getOriginalUrl(String shortCode){
+        return urlRepository.findByShortCode(shortCode).map(ShortUrl::getOriginalUrl);
+    }
 }
