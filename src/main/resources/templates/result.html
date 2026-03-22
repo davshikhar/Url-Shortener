@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Shortened - URL Shortener</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep:       #0a0a12;
+      --bg-card:       rgba(255,255,255,0.045);
+      --border:        rgba(255,255,255,0.10);
+      --border-focus:  rgba(139,92,246,0.7);
+      --accent-1:      #8b5cf6;
+      --accent-2:      #6366f1;
+      --accent-glow:   rgba(139,92,246,0.35);
+      --green:         #10b981;
+      --green-glow:    rgba(16,185,129,0.3);
+      --text-primary:  #f1f0f5;
+      --text-secondary:#9990b8;
+      --text-muted:    #5a5370;
+      --radius-lg:     18px;
+      --radius-md:     12px;
+      --radius-sm:     8px;
+    }
+
+    *, *::before, *::after {
+      margin: 0; padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg-deep);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      width: 520px; height: 520px;
+      background: radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%);
+      top: -120px; left: -100px;
+      animation: drift1 14s ease-in-out infinite alternate;
+    }
+    body::after {
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 70%);
+      bottom: -80px; right: -80px;
+      animation: drift2 18s ease-in-out infinite alternate;
+    }
+
+    @keyframes drift1 {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(60px,40px) scale(1.12); }
+    }
+    @keyframes drift2 {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(-50px,-30px) scale(1.1); }
+    }
+
+    /* ── Card ── */
+    .card {
+      position: relative;
+      z-index: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 48px 44px;
+      width: 100%;
+      max-width: 600px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow:
+              0 0 0 1px rgba(255,255,255,0.04) inset,
+              0 32px 80px rgba(0,0,0,0.5),
+              0 0 60px rgba(99,102,241,0.06);
+      animation: cardIn 0.6s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(28px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── Success Header ── */
+    .success-header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .success-ring {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 72px; height: 72px;
+      margin-bottom: 20px;
+    }
+
+    .success-ring::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: rgba(16,185,129,0.12);
+      animation: ringPulse 2.5s ease-in-out infinite;
+    }
+
+    .success-ring::after {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 1px solid rgba(16,185,129,0.15);
+      animation: ringPulse 2.5s ease-in-out infinite 0.4s;
+    }
+
+    @keyframes ringPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%       { transform: scale(1.12); opacity: 0.5; }
+    }
+
+    .success-icon-inner {
+      position: relative;
+      z-index: 1;
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(16,185,129,0.25), rgba(16,185,129,0.1));
+      border: 1px solid rgba(16,185,129,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      animation: iconPop 0.5s 0.2s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    @keyframes iconPop {
+      from { transform: scale(0.4) rotate(-20deg); opacity: 0; }
+      to   { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }
+
+    h1 span {
+      background: linear-gradient(90deg, var(--green), #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+      font-weight: 300;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 0 -44px 32px;
+    }
+
+    /* ── Result Items ── */
+    .result-item {
+      margin-bottom: 18px;
+    }
+
+    .result-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 7px;
+    }
+
+    .result-value {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      padding: 13px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      word-break: break-all;
+      line-height: 1.5;
+    }
+
+    /* ── Short URL box ── */
+    .short-url-value {
+      background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2));
+      border-color: rgba(139,92,246,0.35);
+      color: #c4b5fd;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    }
+
+    .short-url-value:hover {
+      background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3));
+      transform: scale(1.01);
+      box-shadow: 0 4px 20px rgba(139,92,246,0.2);
+    }
+
+    .short-url-value .copy-hint {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: color 0.2s;
+    }
+
+    .short-url-value:hover .copy-hint {
+      color: #a78bfa;
+    }
+
+    /* ── Metadata row ── */
+    .meta-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-copy, .btn-back {
+      padding: 13px 16px;
+      border-radius: var(--radius-md);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      letter-spacing: 0.02em;
+      transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
+    }
+
+    .btn-copy {
+      background: linear-gradient(135deg, var(--accent-2), var(--accent-1));
+      color: #fff;
+      box-shadow: 0 4px 18px var(--accent-glow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-copy::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.18), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .btn-copy:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-glow); }
+    .btn-copy:hover::before { opacity: 1; }
+    .btn-copy:active { transform: translateY(0); }
+
+    .btn-back {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .btn-back:hover {
+      background: rgba(255,255,255,0.08);
+      transform: translateY(-2px);
+      color: var(--text-primary);
+    }
+
+    /* ── Toast ── */
+    .copy-toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(16,185,129,0.15);
+      border: 1px solid rgba(16,185,129,0.35);
+      color: #34d399;
+      padding: 10px 22px;
+      border-radius: 99px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      backdrop-filter: blur(12px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    .copy-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- Header -->
+  <div class="success-header">
+    <div class="success-ring">
+      <div class="success-icon-inner">✓</div>
+    </div>
+    <h1>Link <span>Created</span></h1>
+    <p class="subtitle">Your short URL is ready to share</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Short URL -->
+  <div class="result-item">
+    <div class="result-label">Short URL</div>
+    <div class="result-value short-url-value" id="shortUrl"
+         onclick="copyToClipboard()"
+         title="Click to copy">
+      <span th:text="${response.shortUrl}"></span>
+      <span class="copy-hint">click to copy</span>
+    </div>
+  </div>
+
+  <!-- Original URL -->
+  <div class="result-item">
+    <div class="result-label">Original URL</div>
+    <div class="result-value" th:text="${response.originalUrl}"></div>
+  </div>
+
+  <!-- Short Code -->
+  <div class="result-item" style="margin-bottom: 28px;">
+    <div class="result-label">Short Code</div>
+    <div class="result-value" th:text="${response.shortCode}"></div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="btn-row">
+    <button class="btn-copy" onclick="copyToClipboard()">⎘ Copy Link</button>
+    <button class="btn-back" onclick="window.location.href='/'">↩ Shorten Another</button>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="copy-toast" id="copyToast">✓ Copied to clipboard</div>
+
+<script>
+  function copyToClipboard() {
+    const shortUrl = document.querySelector('#shortUrl span').textContent.trim();
+    navigator.clipboard.writeText(shortUrl).then(function () {
+      const toast = document.getElementById('copyToast');
+      toast.classList.add('show');
+      setTimeout(function () {
+        toast.classList.remove('show');
+      }, 2200);
+    }).catch(function (err) {
+      console.error('Failed to copy:', err);
+    });
+  }
+</script>
+</body>
+</html>

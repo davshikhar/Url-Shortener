@@ -6,6 +6,7 @@ import com.example.demo.model.ShortenUrlRequest;
 import com.example.demo.model.ShortenUrlResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,16 +21,13 @@ import java.util.Optional;
 @Controller
 public class AppController {
 
-    private final ShortUrlService shortUrlService;
-
-    public AppController(ShortUrlService shortUrlService){
-        this.shortUrlService = shortUrlService;
-    }
+    @Autowired
+    private ShortUrlService shortUrlService;
 
     /// Displays the form page for URL shortening
     @GetMapping("/")
     public String showForm(Model model){
-        model.addAttribute("request",new ShortUrlService());
+        model.addAttribute("request",new ShortenUrlRequest());
         return "index";
     }
 
@@ -38,7 +36,7 @@ public class AppController {
     public String shortUrl(@Valid ShortenUrlRequest request, BindingResult bindingResult, Model model, HttpServletRequest httpRequest){
         if(bindingResult.hasErrors())
             return "index";
-        ShortUrl shortUrl = ShortUrlService.createShortUrl(request.getUrl());
+        ShortUrl shortUrl = shortUrlService.createShortUrl(request.getUrl());
 
         String baseUrl = getBaseUrl(httpRequest);
         String shortUrlString = baseUrl+"/"+shortUrl.getShortCode();
@@ -76,7 +74,7 @@ public class AppController {
 
     @GetMapping("/{shortCode}")
     public String redirectToOriginalUrl(@PathVariable String shortCode){
-        Optional<String> originalUrl = ShortUrlService.getOriginalUrl(shortCode);
+        Optional<String> originalUrl = shortUrlService.getOriginalUrl(shortCode);
         if(originalUrl.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Short code not found");
         }
