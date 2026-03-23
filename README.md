@@ -3,7 +3,7 @@
 A Spring Boot web application that shortens long URLs into clean, shareable links.
 
 ## 🚀 Live Demo
-[Project-link](https://short-url-p5b3.onrender.com)
+[https://short-url-p5b3.onrender.com](https://short-url-p5b3.onrender.com)
 
 ## 🛠️ Tech Stack
 - **Backend:** Java, Spring Boot, Spring MVC
